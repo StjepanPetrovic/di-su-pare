@@ -2,6 +2,9 @@
 node_modules/
 dist/
 
+# Local agent configuration and skills
+.agents/
+
 # Local bank exports and spreadsheet lock files
 *.xls
 *.xlsx

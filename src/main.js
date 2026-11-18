@@ -11,7 +11,7 @@ let query = '';
 let notice = '';
 
 function loadState() {
-  try { return JSON.parse(localStorage.getItem(STORE)) || { transactions: [], rules: {} }; }
+  try { const saved = JSON.parse(localStorage.getItem(STORE)) || { transactions: [], rules: {} }; saved.transactions ||= []; saved.rules ||= {}; for (const t of saved.transactions) t.accountId ||= 'racun-1'; saved.accounts ||= [...new Set(saved.transactions.map(t=>t.accountId))].map((id,i)=>({id,name:`Račun ${i+1}`})); return saved; }
   catch { return { transactions: [], rules: {} }; }
 }
 function save() { localStorage.setItem(STORE, JSON.stringify(state)); }
@@ -71,7 +71,8 @@ function balanceChart(rows) {
   const yTicks = Array.from({length:4},(_,i)=>max-i*(max-min)/3);
   const maxLabels = 5, stride = Math.max(1, Math.ceil(points.length/maxLabels));
   const xIndices = [...new Set([0,...Array.from({length:Math.ceil(points.length/stride)},(_,i)=>i*stride),points.length-1])].filter(i=>i<points.length);
-  return `<div class="chart-scroll"><svg class="balance-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Kretanje stanja računa u odabranom periodu">${yTicks.map(v=>`<line class="chart-grid" x1="${left}" x2="${width-right}" y1="${y(v)}" y2="${y(v)}"/><text class="chart-label" x="${left-9}" y="${y(v)+4}" text-anchor="end">${esc(new Intl.NumberFormat('hr-HR',{notation:'compact',maximumFractionDigits:1}).format(v))} €</text>`).join('')}<path class="chart-area" d="${d} L${x(points.length-1)},${height-bottom} L${x(0)},${height-bottom} Z"/><path class="chart-line" d="${d}"/>${xIndices.map(i=>`<text class="chart-label" x="${x(i)}" y="${height-9}" text-anchor="${i===0?'start':i===points.length-1?'end':'middle'}">${new Date(`${points[i].date}T12:00:00`).toLocaleDateString('hr-HR',{day:'numeric',month:'short'})}</text>`).join('')}${points.map((t,i)=>`<circle class="chart-point" cx="${x(i)}" cy="${y(t.balance)}" r="8"><title>${new Date(`${t.date}T12:00:00`).toLocaleDateString('hr-HR')} · ${money.format(t.balance)}</title></circle>`).join('')}</svg></div><p class="chart-hint">Dodirnite ili prijeđite pokazivačem preko grafa za datum i saldo.</p>`;
+  const series = [...new Set(points.map(t=>t.accountId))].map((id,index)=>{ const accountPoints=points.filter(t=>t.accountId===id); const path=accountPoints.map((t,i)=>`${i?'L':'M'}${x(points.indexOf(t)).toFixed(1)},${y(t.balance).toFixed(1)}`).join(' '); return `<path class="chart-line series-${index%4}" d="${path}"/>${accountPoints.map(t=>`<circle class="chart-point series-${index%4}" cx="${x(points.indexOf(t))}" cy="${y(t.balance)}" r="8"><title>${esc(state.accounts.find(a=>a.id===id)?.name||'Račun')} · ${new Date(`${t.date}T12:00:00`).toLocaleDateString('hr-HR')} · ${money.format(t.balance)}</title></circle>`).join('')}`; });
+  return `<div class="chart-scroll"><svg class="balance-chart" viewBox="0 ${width===760?0:0} ${width} ${height}" role="img" aria-label="Kretanje stanja računa u odabranom periodu">${yTicks.map(v=>`<line class="chart-grid" x1="${left}" x2="${width-right}" y1="${y(v)}" y2="${y(v)}"/><text class="chart-label" x="${left-9}" y="${y(v)+4}" text-anchor="end">${esc(new Intl.NumberFormat('hr-HR',{notation:'compact',maximumFractionDigits:1}).format(v))} €</text>`).join('')}${series.join('')}${xIndices.map(i=>`<text class="chart-label" x="${x(i)}" y="${height-9}" text-anchor="${i===0?'start':i===points.length-1?'end':'middle'}">${new Date(`${points[i].date}T12:00:00`).toLocaleDateString('hr-HR',{day:'numeric',month:'short'})}</text>`).join('')}</svg></div><div class="chart-legend">${state.accounts.map((a,i)=>`<span><i class="series-${i%4}"></i>${esc(a.name)}</span>`).join('')}</div><p class="chart-hint">Dodirnite ili prijeđite pokazivačem preko grafa za datum i saldo.</p>`;
 }
 function render() {
   const years = [...new Set(state.transactions.map(t => t.date.slice(0, 4)))].sort();
@@ -92,8 +93,8 @@ function render() {
     <div class="cards"><article class="metric"><span>Otišlo</span><strong>${money.format(sum.expense)}</strong><small>u odabranom periodu</small></article><article class="metric"><span>Sjelo</span><strong>${money.format(sum.income)}</strong><small>u odabranom periodu</small></article><article class="metric balance"><span>Ostalo nakon troškova</span><strong>${money.format(sum.income - sum.expense)}</strong><small>prihodi umanjeni za potrošnju</small></article></div>
     <article class="panel balance-panel"><div class="panel-title"><div><h3>Graf kretanja</h3><p>Stanje računa nakon transakcija u odabranom periodu.</p></div></div>${balanceChart(rows)}</article>
     <div class="content-grid single-column"><article class="panel"><div class="panel-title"><div><h3>Di su točno odlazile i dolazile</h3><p>${rows.length} transakcija u odabranom periodu</p></div></div><input class="search" id="search" placeholder="Pronađi transakciju…" value="${esc(query)}"><div class="transactions">${filtered.map(t => `<div class="transaction"><div class="tx-main"><span class="tx-desc">${esc(t.description)}</span><span class="tx-meta">${new Date(`${t.date}T12:00:00`).toLocaleDateString('hr-HR')}</span></div><strong class="${t.income ? 'positive' : ''}">${t.income ? '+' : '−'}${money.format(t.income || t.expense)}</strong></div>`).join('') || '<div class="empty-small">Nema transakcija za ovaj period.</div>'}</div></article></div>
-    <div class="actions"><button class="button secondary" data-action="clear">Ukloni podatke s uređaja</button><label class="button primary">Uvezi još transakcija<input id="file" type="file" accept=".xls,.xlsx,.csv" hidden></label></div>
-  </section>` : `<section class="import-card"><div class="file-icon">↥</div><h2>Ajmo vidjeti di su pare</h2><p>Uvezi Excel ili CSV izvod transakcija iz ZABA internet bankarstva i odmah pogledaj kamo novac odlazi. Datoteka se obrađuje samo u pregledniku.</p><label class="button primary">Uvezi izvod<input id="file" type="file" accept=".xls,.xlsx,.csv" hidden></label><span class="formats">Podržani formati: .xls, .xlsx i .csv</span></section>`}
+    <div class="actions"><button class="button secondary" data-action="clear">Ukloni podatke s uređaja</button><label class="button primary">Uvoz za novi račun<input id="file" type="file" accept=".xls,.xlsx,.csv" hidden></label></div>
+  </section>` : `<section class="import-card"><div class="file-icon">↥</div><h2>Ajmo vidjeti di su pare</h2><p>Uvezi Excel izvod transakcija iz ZABA internet bankarstva i odmah pogledaj kamo novac odlazi. Datoteka se obrađuje samo u pregledniku.</p><label class="button primary">Uvezi izvod<input id="file" type="file" accept=".xls,.xlsx" hidden></label><span class="formats">Podržani formati: .xls i .xlsx</span></section>`}
   <section class="trust"><span class="shield">◇</span><div><strong>Pare su tvoje. Podaci isto.</strong><p>Izvod se obrađuje u pregledniku, a podaci ostaju na ovom uređaju.</p></div></section>
   <footer>?! DI SU PARE <span>Uvezi. Pogledaj. Saznaj di idu pare.</span></footer></main>`;
   bind();
@@ -103,9 +104,12 @@ function bind() {
     const file = e.target.files?.[0]; if (!file) return;
     notice = 'Obrađujem datoteku na ovom uređaju…'; render();
     try {
-      const incoming = await parseWorkbook(file), seen = new Set(state.transactions.map(t => `${t.date}|${t.description}|${t.income}|${t.expense}`));
-      const fresh = incoming.filter(t => !seen.has(`${t.date}|${t.description}|${t.income}|${t.expense}`));
-      state.transactions.push(...fresh); save(); notice = `Uvezeno ${fresh.length} transakcija${incoming.length !== fresh.length ? ` (preskočeno ${incoming.length - fresh.length} duplikata)` : ''}.`; activeMonth = fresh.at(-1)?.date.slice(0, 7) || activeMonth;
+      const incoming = await parseWorkbook(file);
+      const accountId = `racun-${Date.now()}`;
+      const account = { id: accountId, name: `Račun ${state.accounts.length + 1}` };
+      state.accounts.push(account);
+      state.transactions.push(...incoming.map(t=>({...t, id:`${accountId}-${t.id}`, accountId})));
+      save(); notice = `Uvezeno ${incoming.length} transakcija na ${account.name}.`; activePeriod = { type: 'all' };
     } catch (err) { notice = err.message || 'Datoteku nije bilo moguće pročitati.'; }
     render();
   });
@@ -114,6 +118,6 @@ function bind() {
   document.querySelector('[data-action="reset-period"]')?.addEventListener('click', () => { activePeriod = { type: 'all', year: '', month: '', dayFrom: '', dayTo: '' }; render(); });
   document.querySelector('#search')?.addEventListener('input', e => { const p = e.target.selectionStart; query = e.target.value; render(); const s = document.querySelector('#search'); s.focus(); s.setSelectionRange(p, p); });
   document.querySelector('[data-action="dismiss"]')?.addEventListener('click', () => { notice = ''; render(); });
-  document.querySelector('[data-action="clear"]')?.addEventListener('click', () => { if (confirm('Trajno ukloniti sve uvezene transakcije i pravila s ovog uređaja?')) { state = { transactions: [], rules: {} }; save(); notice = 'Podaci su uklonjeni.'; render(); } });
+  document.querySelector('[data-action="clear"]')?.addEventListener('click', () => { if (confirm('Trajno ukloniti sve uvezene transakcije i pravila s ovog uređaja?')) { state = { transactions: [], rules: {}, accounts: [] }; save(); notice = 'Podaci su uklonjeni.'; render(); } });
 }
 render();

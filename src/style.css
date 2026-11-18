@@ -309,6 +309,7 @@ main {
 
 .content-grid.single-column{grid-template-columns:1fr}
 .balance-panel{margin:0 0 14px}.chart-scroll{width:100%;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin}.balance-chart{display:block;width:100%;min-width:560px;height:auto;overflow:visible;touch-action:pan-x pan-y}.chart-grid{stroke:#edf0eb;stroke-width:1}.chart-label{fill:#849087;font:10px 'DM Sans',sans-serif}.chart-area{fill:#dceee2;opacity:.8}.chart-line{fill:none;stroke:#39845d;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}.chart-point{fill:transparent;stroke:transparent;stroke-width:10;cursor:crosshair;pointer-events:all}.chart-point:hover,.chart-point:focus{fill:#fff;stroke:#39845d}.chart-hint{margin:3px 0 0;color:#9aa39d;font-size:9px}
+.chart-line.series-1{stroke:#db8951}.chart-line.series-2{stroke:#8b72b5}.chart-line.series-3{stroke:#438eae}.chart-point.series-1:hover{stroke:#db8951}.chart-point.series-2:hover{stroke:#8b72b5}.chart-point.series-3:hover{stroke:#438eae}.chart-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px}.chart-legend span{display:flex;align-items:center;gap:5px;color:#65736a;font-size:10px}.chart-legend i{width:9px;height:9px;border-radius:50%;background:#39845d}.chart-legend i.series-1{background:#db8951}.chart-legend i.series-2{background:#8b72b5}.chart-legend i.series-3{background:#438eae}
 
 .transaction {
     display: flex;
