@@ -26,25 +26,16 @@ body {
 }
 
 .brand {
-    font-family: Manrope, sans-serif;
-    font-size: 22px;
-    font-weight: 800;
-    color: #20332d;
     text-decoration: none;
     display: flex;
     align-items: center;
-    gap: 9px
+    flex: 0 0 auto
 }
 
-.brand-mark {
-    display: grid;
-    place-items: center;
-    width: 30px;
-    height: 30px;
-    background: #d9eee1;
-    color: #287653;
-    border-radius: 10px;
-    font-size: 19px
+.brand-logo {
+    display: block;
+    width: 174px;
+    height: auto
 }
 
 .privacy {
@@ -317,6 +308,7 @@ main {
 }
 
 .content-grid.single-column{grid-template-columns:1fr}
+.balance-panel{margin:0 0 14px}.chart-scroll{width:100%;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin}.balance-chart{display:block;width:100%;min-width:560px;height:auto;overflow:visible;touch-action:pan-x pan-y}.chart-grid{stroke:#edf0eb;stroke-width:1}.chart-label{fill:#849087;font:10px 'DM Sans',sans-serif}.chart-area{fill:#dceee2;opacity:.8}.chart-line{fill:none;stroke:#39845d;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}.chart-point{fill:transparent;stroke:transparent;stroke-width:10;cursor:crosshair;pointer-events:all}.chart-point:hover,.chart-point:focus{fill:#fff;stroke:#39845d}.chart-hint{margin:3px 0 0;color:#9aa39d;font-size:9px}
 
 .transaction {
     display: flex;
@@ -336,10 +328,9 @@ main {
 
 .tx-desc {
     font-size: 10px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 340px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.5;
     color: #49574f
 }
 
@@ -422,6 +413,8 @@ footer span {
         font-size: 10px
     }
 
+    .brand-logo{width:148px}
+
     main {
         padding: 0 17px
     }
@@ -460,10 +453,6 @@ footer span {
 
     .transactions {
         max-height: 330px
-    }
-
-    .tx-desc {
-        max-width: calc(100vw - 145px)
     }
 
     .actions {
